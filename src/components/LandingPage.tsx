@@ -8,7 +8,7 @@ const LandingPage: React.FC = () => {
           Nathan Soufer
         </h1>
         <p className="text-xl text-gray-600">
-          Author, Instructor, and Expert in [Your Expertise Here]. Helping you master [Your Topic].
+          Author, Instructor, and Expert in [test]. Helping you master [Your Topic].
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center gap-6">
