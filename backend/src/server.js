@@ -17,12 +17,37 @@ const supabase = require('./services/supabase');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy for Render deployment
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
-}));
+
+// CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // In production, only allow your specific frontend URL
+    if (process.env.NODE_ENV === 'production') {
+      if (origin === process.env.CLIENT_URL) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    } else {
+      // In development, allow localhost
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(cookieParser());
 
 // IMPORTANT: Webhook route MUST be defined BEFORE body parsing middleware
@@ -62,69 +87,74 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   
-  // Test Supabase connection
-  console.log('\n🔍 Testing Supabase connection...');
-  try {
-    // Test users table
-    const { data: usersTest, error: usersError } = await supabase
-      .from('users')
-      .select('id')
-      .limit(1);
-    
-    if (usersError) {
-      console.error('❌ Users table error:', usersError);
-    } else {
-      console.log('✅ Users table accessible');
-    }
-    
-    // Test purchases table
-    const { data: purchasesTest, error: purchasesError } = await supabase
-      .from('purchases')
-      .select('id')
-      .limit(1);
-    
-    if (purchasesError) {
-      console.error('❌ Purchases table error:', purchasesError);
-    } else {
-      console.log('✅ Purchases table accessible');
-    }
-    
-    // Test if we can see the table structure
-    const { data: userId } = await supabase
-      .from('users')
-      .select('id')
-      .limit(1)
-      .single();
+  // Only run Supabase tests in development
+  if (process.env.NODE_ENV !== 'production') {
+    // Test Supabase connection
+    console.log('\n🔍 Testing Supabase connection...');
+    try {
+      // Test users table
+      const { data: usersTest, error: usersError } = await supabase
+        .from('users')
+        .select('id')
+        .limit(1);
       
-    if (userId) {
-      console.log('📋 Testing purchase insert with user ID:', userId.id);
-      // This is just a test, we'll delete it right after
-      const { data: testPurchase, error: insertError } = await supabase
-        .from('purchases')
-        .insert({
-          user_id: userId.id,
-          product_type: 'course',
-          stripe_session_id: 'test_' + Date.now(),
-          amount: 0,
-          status: 'test',
-          purchased_at: new Date().toISOString(),
-        })
-        .select();
-      
-      if (insertError) {
-        console.error('❌ Purchase insert test failed:', insertError);
+      if (usersError) {
+        console.error('❌ Users table error:', usersError);
       } else {
-        console.log('✅ Purchase insert test successful');
-        // Clean up test purchase
-        await supabase
-          .from('purchases')
-          .delete()
-          .eq('id', testPurchase[0].id);
+        console.log('✅ Users table accessible');
       }
+      
+      // Test purchases table
+      const { data: purchasesTest, error: purchasesError } = await supabase
+        .from('purchases')
+        .select('id')
+        .limit(1);
+      
+      if (purchasesError) {
+        console.error('❌ Purchases table error:', purchasesError);
+      } else {
+        console.log('✅ Purchases table accessible');
+      }
+      
+      // Test if we can see the table structure
+      const { data: userId } = await supabase
+        .from('users')
+        .select('id')
+        .limit(1)
+        .single();
+        
+      if (userId) {
+        console.log('📋 Testing purchase insert with user ID:', userId.id);
+        // This is just a test, we'll delete it right after
+        const { data: testPurchase, error: insertError } = await supabase
+          .from('purchases')
+          .insert({
+            user_id: userId.id,
+            product_type: 'course',
+            stripe_session_id: 'test_' + Date.now(),
+            amount: 0,
+            status: 'test',
+            purchased_at: new Date().toISOString(),
+          })
+          .select();
+        
+        if (insertError) {
+          console.error('❌ Purchase insert test failed:', insertError);
+        } else {
+          console.log('✅ Purchase insert test successful');
+          // Clean up test purchase
+          await supabase
+            .from('purchases')
+            .delete()
+            .eq('id', testPurchase[0].id);
+        }
+      }
+      
+    } catch (err) {
+      console.error('❌ Supabase connection test failed:', err);
     }
-    
-  } catch (err) {
-    console.error('❌ Supabase connection test failed:', err);
+    console.log('');
+  } else {
+    console.log('✅ Server started in production mode');
   }
-  console.log('');
 });
