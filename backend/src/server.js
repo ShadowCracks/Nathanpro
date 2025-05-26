@@ -25,24 +25,14 @@ if (process.env.NODE_ENV === 'production') {
 // Middleware
 app.use(helmet());
 
-// CORS configuration
+// CORS configuration - Fixed for production
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // In production, only allow your specific frontend URL
-    if (process.env.NODE_ENV === 'production') {
-      if (origin === process.env.CLIENT_URL) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    } else {
-      // In development, allow localhost
-      callback(null, true);
-    }
-  },
+  origin: [
+    'https://nathanpro-seven.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:5174'
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 };
