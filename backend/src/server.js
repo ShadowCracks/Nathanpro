@@ -33,6 +33,8 @@ const corsOptions = {
     const allowedOrigins = [
       'https://nathanpro.onrender.com',
       'https://accounts.google.com',
+      'https://checkout.stripe.com',
+      'https://api.stripe.com',
       'http://localhost:5173',
       'http://localhost:3000'
     ];
