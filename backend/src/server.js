@@ -113,7 +113,11 @@ app.get('/api/test-cookie', (req, res) => {
 app.use(express.static(path.join(__dirname, '../../client/dist')));
 
 // Catch all handler - send React app for any route not handled by API
-app.get('*', (req, res) => {
+app.use((req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
   res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 
