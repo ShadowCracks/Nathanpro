@@ -32,8 +32,7 @@ app.use(helmet({
 const corsOptions = {
   origin: function(origin, callback) {
     const allowedOrigins = [
-      'https://nathanpro-1.onrender.com',  // Add your new frontend URL
-      'https://nathanpro-seven.vercel.app',
+      'https://nathanpro-1.onrender.com',
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:5174'
@@ -110,6 +109,14 @@ app.get('/api/test-cookie', (req, res) => {
   });
 });
 
+// Serve static files from React app
+app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+// Catch all handler - send React app for any route not handled by API
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -117,11 +124,6 @@ app.use((err, req, res, next) => {
     error: err.message || 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
 });
 
 // Start server
@@ -154,38 +156,6 @@ app.listen(PORT, async () => {
       } else {
         console.log('✅ Purchases table accessible');
       }
-      
-      const { data: userId } = await supabase
-        .from('users')
-        .select('id')
-        .limit(1)
-        .single();
-        
-      if (userId) {
-        console.log('📋 Testing purchase insert with user ID:', userId.id);
-        const { data: testPurchase, error: insertError } = await supabase
-          .from('purchases')
-          .insert({
-            user_id: userId.id,
-            product_type: 'course',
-            stripe_session_id: 'test_' + Date.now(),
-            amount: 0,
-            status: 'test',
-            purchased_at: new Date().toISOString(),
-          })
-          .select();
-        
-        if (insertError) {
-          console.error('❌ Purchase insert test failed:', insertError);
-        } else {
-          console.log('✅ Purchase insert test successful');
-          await supabase
-            .from('purchases')
-            .delete()
-            .eq('id', testPurchase[0].id);
-        }
-      }
-      
     } catch (err) {
       console.error('❌ Supabase connection test failed:', err);
     }
