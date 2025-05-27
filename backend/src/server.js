@@ -37,18 +37,35 @@ app.use(
         'https://accounts.google.com',
         'https://apis.google.com'
       ],
-      frameSrc: [
+      scriptSrcElem: [
         "'self'",
         'https://accounts.google.com',
-        'https://*.google.com'
+        'https://apis.google.com'
       ],
-      objectSrc: ["'none'"],
-      connectSrc: ["'self'", 'https://*.googleapis.com'],
-      imgSrc: ["'self'", 'data:', 'https://*.googleusercontent.com'],
-      styleSrc: ["'self'", "'unsafe-inline'"]
-    },
+      connectSrc: [
+        "'self'",
+        'https://accounts.google.com',
+        'https://apis.google.com'
+      ],
+      frameSrc: [
+        "'self'",
+        'https://accounts.google.com'
+      ],
+      imgSrc: [
+        "'self'",
+        'https://*.googleusercontent.com',
+        'https://*.gstatic.com',
+        'data:'
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'"
+      ],
+      objectSrc: ["'none'"]
+    }
   })
 );
+
 
 // CORS configuration
 const corsOptions = {
