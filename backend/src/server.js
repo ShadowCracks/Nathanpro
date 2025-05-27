@@ -26,42 +26,8 @@ if (process.env.NODE_ENV === 'production') {
 
 // 🔐 Helmet configuration with CSP for Google Sign-In (ONLY ONE helmet config)
 app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP completely for testing
   crossOriginResourcePolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "'unsafe-eval'",
-        "https://accounts.google.com",
-        "https://apis.google.com"
-      ],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://accounts.google.com"
-      ],
-      frameSrc: [
-        "'self'",
-        "https://accounts.google.com",
-        "https://www.youtube.com"
-      ],
-      connectSrc: [
-        "'self'",
-        "https://accounts.google.com",
-        "https://nathanpro.onrender.com",
-        "http://localhost:3001"
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "https:",
-        "*.googleusercontent.com"
-      ],
-      fontSrc: ["'self'", "https:", "data:"]
-    }
-  }
 }));
 
 // CORS configuration
