@@ -24,11 +24,7 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// 🔐 Helmet CSP update to allow Google Sign-In
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-}));
-// Middleware
+// 🔐 Helmet configuration with CSP for Google Sign-In (ONLY ONE helmet config)
 app.use(helmet({
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: {
@@ -68,18 +64,21 @@ app.use(helmet({
   }
 }));
 
-
 // CORS configuration
 const corsOptions = {
   origin: function(origin, callback) {
     const allowedOrigins = [
       'https://nathanpro.onrender.com',
       'https://accounts.google.com',
+      'http://localhost:5173',
+      'http://localhost:3000'
     ];
+    
     if (!origin) return callback(null, true);
+    
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
-    } else if (process.env.NODE_ENV === 'production' && origin.includes('nathanpro.onrender.com')) {
+    } else if (process.env.NODE_ENV === 'production' && origin && origin.includes('nathanpro.onrender.com')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
