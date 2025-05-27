@@ -2,8 +2,8 @@
     "name": "nathanpro",
     "version": "1.0.0",
     "scripts": {
-      "build": "cd client && npm install && npm run build",
+      "build": "cd client && npm ci && npm run build",
       "start": "cd backend && npm start",
-      "install-all": "cd client && npm install && cd ../backend && npm install"
+      "install-all": "cd client && npm ci && cd ../backend && npm ci"
     }
   }
