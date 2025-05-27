@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
+//const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
@@ -25,52 +25,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // 🔐 Helmet configuration with CSP for Google Sign-In (ONLY ONE helmet config)
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "'unsafe-eval'",
-        "https://accounts.google.com",
-        "https://apis.google.com",
-        "https://js.stripe.com",  // Add this for Stripe
-        "https://checkout.stripe.com"  // Add this for Stripe Checkout
-      ],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'",
-        "https://accounts.google.com",
-        "https://checkout.stripe.com"  // Add this for Stripe styles
-      ],
-      frameSrc: [
-        "'self'",
-        "https://accounts.google.com",
-        "https://www.youtube.com",
-        "https://js.stripe.com",  // Add this for Stripe
-        "https://checkout.stripe.com"  // Add this for Stripe Checkout
-      ],
-      connectSrc: [
-        "'self'",
-        "https://accounts.google.com",
-        "https://nathanpro.onrender.com",
-        "https://api.stripe.com",  // Add this for Stripe API
-        "https://checkout.stripe.com",  // Add this
-        "http://localhost:3001"
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "https:",
-        "*.googleusercontent.com",
-        "https://*.stripe.com"  // Add this for Stripe images
-      ],
-      fontSrc: ["'self'", "https:", "data:"]
-    }
-  }
-}));
+
 
 // CORS configuration
 const corsOptions = {
