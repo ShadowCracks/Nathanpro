@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -31,6 +32,7 @@ app.use(helmet({
 const corsOptions = {
   origin: function(origin, callback) {
     const allowedOrigins = [
+      'https://nathanpro-1.onrender.com',  // Add your new frontend URL
       'https://nathanpro-seven.vercel.app',
       'http://localhost:5173',
       'http://localhost:3000',
@@ -48,7 +50,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'admin-id'],
   exposedHeaders: ['set-cookie']
 };
 
