@@ -118,8 +118,8 @@ app.get('/api/test-cookie', (req, res) => {
 
 // Serve static files from React app - FIX THE PATH
 const clientBuildPath = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, '../../../client/dist')  // Adjusted for Render's structure
-  : path.join(__dirname, '../../client/dist');
+  ? path.join(__dirname, '../../../client')  // Adjusted for Render's structure
+  : path.join(__dirname, '../../client');
 
 app.use(express.static(clientBuildPath));
 
