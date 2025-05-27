@@ -28,43 +28,45 @@ if (process.env.NODE_ENV === 'production') {
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
-app.use(
-  helmet.contentSecurityPolicy({
+// Middleware
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: [
         "'self'",
-        'https://accounts.google.com',
-        'https://apis.google.com'
-      ],
-      scriptSrcElem: [
-        "'self'",
-        'https://accounts.google.com',
-        'https://apis.google.com'
-      ],
-      connectSrc: [
-        "'self'",
-        'https://accounts.google.com',
-        'https://apis.google.com'
-      ],
-      frameSrc: [
-        "'self'",
-        'https://accounts.google.com'
-      ],
-      imgSrc: [
-        "'self'",
-        'https://*.googleusercontent.com',
-        'https://*.gstatic.com',
-        'data:'
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://accounts.google.com",
+        "https://apis.google.com"
       ],
       styleSrc: [
         "'self'",
-        "'unsafe-inline'"
+        "'unsafe-inline'",
+        "https://accounts.google.com"
       ],
-      objectSrc: ["'none'"]
+      frameSrc: [
+        "'self'",
+        "https://accounts.google.com",
+        "https://www.youtube.com"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://accounts.google.com",
+        "https://nathanpro.onrender.com",
+        "http://localhost:3001"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https:",
+        "*.googleusercontent.com"
+      ],
+      fontSrc: ["'self'", "https:", "data:"]
     }
-  })
-);
+  }
+}));
 
 
 // CORS configuration
