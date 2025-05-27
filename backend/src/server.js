@@ -4,7 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const path = require('path');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -28,22 +27,18 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 
-// CORS configuration - simplified since frontend and backend are on same domain now
+// CORS configuration
 const corsOptions = {
   origin: function(origin, callback) {
     const allowedOrigins = [
+      'https://nathanpro-seven.vercel.app',
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:5174'
     ];
     
-    // Allow requests with no origin (like mobile apps) or same-origin requests
+    // Allow requests with no origin (like mobile apps)
     if (!origin) return callback(null, true);
-    
-    // In production, allow same-origin requests
-    if (process.env.NODE_ENV === 'production') {
-      return callback(null, true);
-    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -87,7 +82,7 @@ app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 // Body parsing middleware for all other routes
 app.use(express.json());
 
-// API Routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/course', courseRoutes);
 app.use('/api/stripe', paymentRoutes);
@@ -113,16 +108,6 @@ app.get('/api/test-cookie', (req, res) => {
   });
 });
 
-// Serve static files from the React build (only in production)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../../client/dist')));
-
-  // All non-API routes should serve the React app
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../client/dist', 'index.html'));
-  });
-}
-
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -132,12 +117,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler for API routes only (in development)
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
-  });
-}
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 // Start server
 app.listen(PORT, async () => {
@@ -207,6 +190,5 @@ app.listen(PORT, async () => {
     console.log('');
   } else {
     console.log('✅ Server started in production mode');
-    console.log('🚀 Serving frontend and backend from same domain');
   }
 });
