@@ -74,6 +74,7 @@ const corsOptions = {
   origin: function(origin, callback) {
     const allowedOrigins = [
       'https://nathanpro.onrender.com',
+      'https://accounts.google.com',
     ];
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
