@@ -28,23 +28,30 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 
-// CORS configuration
+// CORS configuration - simplified for production
 const corsOptions = {
   origin: function(origin, callback) {
+    // In production, allow your own domain and common variations
     const allowedOrigins = [
+      'https://nathanpro.onrender.com',
       'https://nathanpro-1.onrender.com',
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:5174'
     ];
     
-    // Allow requests with no origin (like mobile apps)
+    // Allow requests with no origin (like mobile apps or same-origin requests)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // In production, you might want to allow same-origin
+      if (process.env.NODE_ENV === 'production' && origin.includes('nathanpro.onrender.com')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
     }
   },
   credentials: true,
@@ -109,8 +116,12 @@ app.get('/api/test-cookie', (req, res) => {
   });
 });
 
-// Serve static files from React app
-app.use(express.static(path.join(__dirname, '../../client/dist')));
+// Serve static files from React app - FIX THE PATH
+const clientBuildPath = process.env.NODE_ENV === 'production' 
+  ? path.join(__dirname, '../../../client/dist')  // Adjusted for Render's structure
+  : path.join(__dirname, '../../client/dist');
+
+app.use(express.static(clientBuildPath));
 
 // Catch all handler - send React app for any route not handled by API
 app.use((req, res, next) => {
@@ -118,7 +129,21 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
     return next();
   }
-  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  
+  const indexPath = path.join(clientBuildPath, 'index.html');
+  
+  // Check if the file exists before sending
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error('Frontend build not found at:', indexPath);
+    res.status(404).json({ 
+      error: 'Frontend not found', 
+      looking_at: indexPath,
+      cwd: process.cwd(),
+      dirname: __dirname 
+    });
+  }
 });
 
 // Error handling middleware
@@ -134,6 +159,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Looking for frontend at: ${clientBuildPath}`);
   
   // Only run Supabase tests in development
   if (process.env.NODE_ENV !== 'production') {
