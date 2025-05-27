@@ -41,6 +41,8 @@ const SignInPage: React.FC = () => {
           theme: 'outline',
           size: 'large',
           width: 280,
+          ux_mode: 'redirect', // Add this line
+          redirect_uri: 'https://nathanpro.onrender.com' // Add this line
         }
       );
     };

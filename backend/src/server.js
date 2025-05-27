@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
+//const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
@@ -25,10 +25,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // 🔐 Helmet configuration with CSP for Google Sign-In (ONLY ONE helmet config)
-app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP completely for testing
-  crossOriginResourcePolicy: false,
-}));
+
 
 // CORS configuration
 const corsOptions = {
