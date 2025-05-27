@@ -3,7 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
 // Configure axios defaults
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'https://nathanpro.onrender.com';
 axios.defaults.withCredentials = true;
 
 interface User {

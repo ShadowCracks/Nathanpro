@@ -34,10 +34,6 @@ const corsOptions = {
     // In production, allow your own domain and common variations
     const allowedOrigins = [
       'https://nathanpro.onrender.com',
-      'https://nathanpro-1.onrender.com',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:5174'
     ];
     
     // Allow requests with no origin (like mobile apps or same-origin requests)
