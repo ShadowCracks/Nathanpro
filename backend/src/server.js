@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const fs = require('fs');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -23,31 +24,45 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Middleware
+// 🔐 Helmet CSP update to allow Google Sign-In
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        'https://accounts.google.com',
+        'https://apis.google.com'
+      ],
+      frameSrc: [
+        "'self'",
+        'https://accounts.google.com',
+        'https://*.google.com'
+      ],
+      objectSrc: ["'none'"],
+      connectSrc: ["'self'", 'https://*.googleapis.com'],
+      imgSrc: ["'self'", 'data:', 'https://*.googleusercontent.com'],
+      styleSrc: ["'self'", "'unsafe-inline'"]
+    },
+  })
+);
 
-// CORS configuration - simplified for production
+// CORS configuration
 const corsOptions = {
   origin: function(origin, callback) {
-    // In production, allow your own domain and common variations
     const allowedOrigins = [
       'https://nathanpro.onrender.com',
     ];
-    
-    // Allow requests with no origin (like mobile apps or same-origin requests)
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else if (process.env.NODE_ENV === 'production' && origin.includes('nathanpro.onrender.com')) {
       callback(null, true);
     } else {
-      // In production, you might want to allow same-origin
-      if (process.env.NODE_ENV === 'production' && origin.includes('nathanpro.onrender.com')) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -59,7 +74,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
-// Update the auth controller to fix cookie settings
+// 🍪 Universal cookie override with production-ready secure settings
 app.use((req, res, next) => {
   const originalCookie = res.cookie.bind(res);
   res.cookie = function(name, value, options = {}) {
@@ -67,77 +82,68 @@ app.use((req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: options.maxAge || 7 * 24 * 60 * 60 * 1000, // 7 days default
+      maxAge: options.maxAge || 7 * 24 * 60 * 60 * 1000,
       path: '/',
       ...options
     };
-    
-    // Don't set domain - let the browser handle it
     delete cookieOptions.domain;
-    
     return originalCookie(name, value, cookieOptions);
   };
   next();
 });
 
-// IMPORTANT: Webhook route MUST be defined BEFORE body parsing middleware
+// Webhook route (must be before JSON body parsing)
 app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
 
-// Body parsing middleware for all other routes
+// Body parsing
 app.use(express.json());
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/course', courseRoutes);
 app.use('/api/stripe', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check endpoint
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
-// Test cookie endpoint
+// Cookie test route
 app.get('/api/test-cookie', (req, res) => {
   res.cookie('testCookie', 'testValue', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 60000 // 1 minute
+    maxAge: 60000
   });
-  res.json({ 
+  res.json({
     message: 'Test cookie set',
     cookies: req.cookies,
     headers: req.headers
   });
 });
 
-// Serve static files from React app - FIX THE PATH
-const clientBuildPath = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, '../../client/dist')  // Adjusted for Render's structure
+// Serve frontend static files
+const clientBuildPath = process.env.NODE_ENV === 'production'
+  ? path.join(__dirname, '../../client/dist')
   : path.join(__dirname, '../client/dist');
 
 app.use(express.static(clientBuildPath));
 
-// Catch all handler - send React app for any route not handled by API
+// SPA fallback to index.html
 app.use((req, res, next) => {
-  // Skip API routes
-  if (req.path.startsWith('/api')) {
-    return next();
-  }
-  
+  if (req.path.startsWith('/api')) return next();
   const indexPath = path.join(clientBuildPath, 'index.html');
-  
-  // Check if the file exists before sending
-  if (require('fs').existsSync(indexPath)) {
+  if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
     console.error('Frontend build not found at:', indexPath);
-    res.status(404).json({ 
-      error: 'Frontend not found', 
+    res.status(404).json({
+      error: 'Frontend not found',
       looking_at: indexPath,
       cwd: process.cwd(),
-      dirname: __dirname 
+      dirname: __dirname
     });
   }
 });
@@ -156,8 +162,7 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`Looking for frontend at: ${clientBuildPath}`);
-  
-  // Only run Supabase tests in development
+
   if (process.env.NODE_ENV !== 'production') {
     console.log('\n🔍 Testing Supabase connection...');
     try {
@@ -165,18 +170,16 @@ app.listen(PORT, async () => {
         .from('users')
         .select('id')
         .limit(1);
-      
       if (usersError) {
         console.error('❌ Users table error:', usersError);
       } else {
         console.log('✅ Users table accessible');
       }
-      
+
       const { data: purchasesTest, error: purchasesError } = await supabase
         .from('purchases')
         .select('id')
         .limit(1);
-      
       if (purchasesError) {
         console.error('❌ Purchases table error:', purchasesError);
       } else {
